@@ -1,8 +1,10 @@
 import random
+
 def sq_empty(board, y,x):
     if board[y][x] == " ":
         return True
     return False
+
 def emptysquares(board):
     result = []
     for i in range (len(board)):
@@ -16,15 +18,17 @@ def randmove(board):
     move_x = emptysquares(board)[random.randrange(0,len(emptysquares(board)))][1]
     return move_y, move_x
 
+
 def is_longest_seq(board, col, y_start, x_start, length, d_y, d_x):
     y_end = y_start + (length-1)*d_y
     x_end = x_start + (length-1)*d_x
     endstatus = "continue"
     startstatus = "continue"
 
-    if y_end+d_y >len(board)-1 or x_end+d_x > len(board)-1:
+    if y_end+d_y > len(board)-1 or x_end+d_x > len(board)-1 or y_end+d_y <0 or x_end+d_x<0:
         endstatus = "stop"
-    if y_start - d_y < 0 or x_start-d_x <0:
+
+    if y_start - d_y < 0 or x_start-d_x < 0 or y_start-d_y>len(board)-1 or x_start-d_x>len(board)-1:
         startstatus = "stop"
     if startstatus == "continue":
         if board[y_start - d_y][x_start - d_x] == col:
@@ -34,6 +38,7 @@ def is_longest_seq(board, col, y_start, x_start, length, d_y, d_x):
 
             return False
     return True
+
 def print_board(board):
 
     s = "*"
@@ -63,7 +68,7 @@ def analysis(board):
     for c, full_name in [["b", "Black"], ["w", "White"]]:
         print("%s stones" % (full_name))
         for i in range(2, 6):
-            open, semi_open = detect_rows(board, c, i);
+            open, semi_open = detect_rows(board, c, i)
             print("Open rows of length %d: %d" % (i, open))
             print("Semi-open rows of length %d: %d" % (i, semi_open))
 
@@ -129,34 +134,35 @@ def is_empty(board):
 
 def is_bounded(board, y_end, x_end, length, d_y, d_x):
     sides_bounded = 0
-    x_start = x_end - length*d_x
-    y_start = y_end - length*d_y
+    x_start = x_end - (length-1)*d_x
+    y_start = y_end - (length-1)*d_y
     statusend = "continue"
     statusstart = "continue"
 
-    if y_end+d_y > len(board)-1 or x_end+d_x>len(board)-1:
-        sides_bounded = sides_bounded+1
-        statusend = "stop"
-    if y_start -d_x < 0 or x_start-d_x <0:
-        sides_bounded = sides_bounded+1
-        statusstart = "stop"
+    if x_start >= 0 and x_start <= len(board)-1 and y_start>=0 and y_start <= len(board)-1 and x_end >= 0 and x_end <= len(board)-1 and y_end>=0 and y_end <= len(board)-1:
+        if y_end+d_y > len(board)-1 or x_end+d_x>len(board)-1 or y_end+d_y<0 or x_end+d_x<0:
+            sides_bounded = sides_bounded+1
+            statusend = "stop"
+        if y_start -d_y < 0 or x_start-d_x <0 or y_start-d_y > len(board)-1 or x_start-d_x > len(board)-1:
+            sides_bounded = sides_bounded+1
+            statusstart = "stop"
 
-    if sides_bounded<2:
-        if statusend == "continue":
-            if board[y_end+d_y][x_end+d_x] != " ":
-                sides_bounded = sides_bounded+1
-        if statusstart == "continue":
-            if board[y_start-d_y][x_start-d_x] != " ":
-                sides_bounded = sides_bounded+1
+        if sides_bounded<2:
+            if statusend == "continue":
+                if board[y_end+d_y][x_end+d_x] != " ":
+                    sides_bounded = sides_bounded+1
+            if statusstart == "continue":
+                if board[y_start-d_y][x_start-d_x] != " ":
+                    sides_bounded = sides_bounded+1
 
 
 
-    if sides_bounded == 2:
-        return "CLOSED"
-    elif sides_bounded ==1:
-        return "SEMI-OPEN"
-    elif sides_bounded == 0:
-        return "OPEN"
+        if sides_bounded == 2:
+            return "CLOSED"
+        elif sides_bounded == 1:
+            return "SEMI-OPEN"
+        elif sides_bounded == 0:
+            return "OPEN"
 
 def detect_row(board, col, y_start, x_start, length, d_y, d_x):
 
@@ -172,16 +178,12 @@ def detect_row(board, col, y_start, x_start, length, d_y, d_x):
             break
         elif j > len(board)-1 or j < 0 :
             break
-
         if board[i][j] == col:
-            if length == 5:
-                if is_sequence_complete(board, col, i, j, length, d_y,d_x) == True:
-                    return ("WIN", col)
-            if is_sequence_complete(board, col,i,j, length, d_y, d_x) == True and is_longest_seq(board,col,i,j,length,d_y,d_x)==True:
-                if is_bounded(board, i+(length*d_y), j+(length*d_x), length, d_y, d_x) == "SEMI-OPEN":
 
+            if is_sequence_complete(board, col,i,j, length, d_y, d_x) == True and is_longest_seq(board,col,i,j,length,d_y,d_x)==True:
+                if is_bounded(board, i+((length-1)*d_y), j+((length-1)*d_x), length, d_y, d_x) == "SEMI-OPEN":
                     semi_open_seq_count = semi_open_seq_count+1
-                elif is_bounded(board, i+(length*d_y), j+ (length*d_x), length, d_y, d_x) == "OPEN":
+                elif is_bounded(board, i+((length-1)*d_y), j+ ((length-1)*d_x), length, d_y, d_x) == "OPEN":
                     open_seq_count = open_seq_count + 1
 
         i = i + d_y
@@ -205,29 +207,29 @@ def detect_rows(board, col, length):
                 #           X X X
                 #           X X X X
                 #           X X X X X
+                if n == 1 and m == 0:
+                    continue
+                if n == -1 and m == 0:
+                    continue
                 if m == 0 and n == 0:
                     continue
 
                 resulty = detect_row(board, col, i, 0, length, n, m)
-                if resulty[0] == "WIN":
-                    return resulty
+
                 open_seq_count = open_seq_count + resulty[0]
                 semi_open_seq_count = semi_open_seq_count + resulty[1]
 
         #GO ALONG TOP, DO ALL VERTICALS
         resultx = detect_row(board, col,0,i,length,1,0)
-        if resultx[0] == "WIN":
-            return resultx
+
         open_seq_count = open_seq_count +resultx[0]
         semi_open_seq_count = semi_open_seq_count+resultx[1]
 
-    for i in range (2, len(board)):
-        resultdown = detect_row(board, col, i, len(board), length, -1, -1)
-        resultup = detect_row(board, col, i, len(board), length, 1,-1)
-        if resultdown[0] == "WIN":
-            return resultdown
-        if resultup[0] == "WIN":
-            return resultup
+    for i in range (1, len(board)-1):
+        #RIGHT SIDE, FINISH DIAGONALS
+        resultdown = detect_row(board, col, i, len(board)-1, length, -1, -1)
+        resultup = detect_row(board, col, i, len(board)-1, length, 1,-1)
+
         open_seq_count = open_seq_count + resultup[0]
         semi_open_seq_count = semi_open_seq_count + resultup[1]
         open_seq_count = open_seq_count + resultdown[0]
@@ -235,29 +237,92 @@ def detect_rows(board, col, length):
 
 
     return open_seq_count, semi_open_seq_count
+#includes closed sequences
+def search_row(board, col, y_start, x_start, length, d_y, d_x):
 
+    i = y_start
+    j = x_start
+
+
+    num = 0
+    while is_sq_in_board(board,i,j) == True:
+
+        if i > len(board)-1 or i < 0:
+            break
+        elif j > len(board)-1 or j < 0 :
+            break
+        if board[i][j] == col:
+
+            if is_sequence_complete(board, col,i,j, length, d_y, d_x) == True and is_longest_seq(board,col,i,j,length,d_y,d_x)==True:
+                num = num +1
+
+        i = i + d_y
+        j = j + d_x
+
+    return num
+#includes closed sequences
+def search_rows(board, col, length):
+    ####CHANGE ME
+    num = 0
+    for i in range (len(board)):
+
+        for n in range (-1, 2):
+
+            for m in range (-1,2):
+
+                #GO ALONG LEFT SIDE, DO ALL DIAGONALS AND HORIZONTAL
+                #WILL COVER X X X X X
+                #           X X X X
+                #           X X X
+                #           X X X X
+                #           X X X X X
+                if n == 1 and m == 0:
+                    continue
+                if n == -1 and m == 0:
+                    continue
+                if m == 0 and n == 0:
+                    continue
+
+                resulty = search_row(board, col, i, 0, length, n, m)
+                num = num + resulty
+        #GO ALONG TOP, DO ALL VERTICALS
+        resultx = search_row(board, col,0,i,length,1,0)
+
+        num = num + resultx
+
+    for i in range (2, len(board)-1):
+        resultdown = search_row(board, col, i, len(board)-1, length, -1, -1)
+        resultup = search_row(board, col, i, len(board)-1, length, 1,-1)
+
+        num = num + resultdown + resultup
+
+    return num
 def search_max(board):
     initscore = score(board)
-    # print(initscore)
     curmax = initscore
     move_y, move_x = randmove(board)
 
     for i in range (len(board)-1):
         for j in range (len(board)-1):
             if sq_empty(board,i,j) == True:
+
                 board[i][j] = "b"
-                # print(score(board))
+
                 if score(board) > curmax:
                     curmax = score(board)
                     move_y = i
                     move_x = j
+                if is_win(board) == "Black won":
+                    board[i][j] = " "
+                    return i, j
                 board[i][j] = " "
+
     return move_y, move_x
 
 def is_win(board):
-    if score(board) == 100000:
+    if search_rows(board,'w', 5)>0:
         return "White won"
-    if score(board) == -100000:
+    if search_rows(board,'b',5)>0:
         return "Black won"
     elif len(emptysquares(board)) == 0:
         return "Draw"
@@ -272,10 +337,7 @@ def score(board):
     semi_open_w = {}
 
     for i in range(2, 6):
-        if detect_rows(board, "w", i)[0] == "WIN":
-            return MAX_SCORE
-        if detect_rows(board, "b", i)[0] == "WIN":
-            return -MAX_SCORE
+
         open_b[i], semi_open_b[i] = detect_rows(board, "b", i)
         open_w[i], semi_open_w[i] = detect_rows(board, "w", i)
 
@@ -488,13 +550,6 @@ def some_tests():
 
 
 if __name__ == "__main__":
-    newboard =  make_empty_board(8)
-    put_seq_on_board(newboard,0,0,1,1,5,"w")
-    print(is_win(newboard))
-    # test_is_empty()
-    # test_is_bounded()
-    # test_detect_row()
-    # test_detect_rows()
-    # some_tests()
-    # test_search_max()
+    play_gomoku(8)
+
 
